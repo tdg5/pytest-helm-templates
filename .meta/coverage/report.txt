@@ -3,12 +3,12 @@ Name                                                           Stmts   Miss  Cov
 pytest_helm_templates/__init__.py                                  2      0   100%
 pytest_helm_templates/commands/__init__.py                         2      0   100%
 pytest_helm_templates/commands/template_command.py                45      0   100%
-pytest_helm_templates/helm_runner.py                              44      3    93%
+pytest_helm_templates/helm_runner.py                              61      4    93%
 pytest_helm_templates_test/__init__.py                             2      0   100%
 pytest_helm_templates_test/commands/template_command_test.py       6      0   100%
 pytest_helm_templates_test/conftest.py                             0      0   100%
-pytest_helm_templates_test/helm_runner_test.py                    40      0   100%
+pytest_helm_templates_test/helm_runner_test.py                    52      0   100%
 pytest_helm_templates_test/test_helpers/__init__.py                2      0   100%
 pytest_helm_templates_test/test_helpers/fixtures/__init__.py      11      3    73%
 ----------------------------------------------------------------------------------
-TOTAL                                                            154      6    96%
+TOTAL                                                            183      7    96%
