@@ -1,18 +1,16 @@
 attrs==23.2.0
-black==23.12.1
+black==24.2.0
 build==1.0.3
 certifi==2024.2.2
 cffi==1.16.0
 cfgv==3.4.0
 charset-normalizer==3.3.2
 click==8.1.7
-colorama==0.4.6
 coverage==7.4.4
 coverage-badge==1.1.0
 cryptography==42.0.5
 distlib==0.3.8
 dlint==0.14.1
-docopt==0.6.2
 docutils==0.20.1
 dparse==0.6.3
 eradicate==2.3.0
@@ -21,6 +19,7 @@ filelock==3.13.3
 flake8==7.0.0
 flake8-comprehensions==3.14.0
 flake8-eradicate==1.5.0
+Flake8-pyproject==1.2.3
 flake8-spellcheck==0.28.0
 flake8-typing-imports==1.15.0
 identify==2.5.35
@@ -55,7 +54,7 @@ Pygments==2.17.2
 pyproject_hooks==1.0.0
 pytest==7.4.4
 pytest-mock==3.12.0
-pytest-watch==4.2.0
+pytest-watcher==0.4.2
 PyYAML==6.0.1
 readme_renderer==43.0
 requests==2.31.0

@@ -1,11 +1,16 @@
 [build-system]
-requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools>=69"]
 
 [tool.black]
+include = "pytest_helm_templates(_test)?/.*\\.py$"
 line-length = 88
 target-version = ["py39"]
-include = "pytest_helm_templates(_test)?/.*\\.py$"
+
+[tool.flake8]
+ignore = ["E203", "E251", "E701", "N805", "W503", "DAR101", "DAR201", "DAR301", "DAR401"]
+max-line-length = 88
+min_python_version = 3.9
 
 [tool.isort]
 include_trailing_comma = true

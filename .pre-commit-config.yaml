@@ -11,12 +11,12 @@ repos:
         name: black
         language: system
         entry: black
-        args: ["pytest_helm_templates", "pytest_helm_templates_test"]
+        args: ["--preview"]
         types: [python]
       - id: flake8
         name: flake8
         language: python
-        entry: flake8
+        entry: flake8p
         args: ["pytest_helm_templates", "pytest_helm_templates_test"]
         types: [python]
         additional_dependencies:

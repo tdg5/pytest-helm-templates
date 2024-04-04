@@ -82,10 +82,8 @@ class HelmRunner:
             notes_output = manifests[0]["NOTES.txt"]
             if not isinstance(notes_output, str):
                 raise ValueError(
-                    (
-                        "Unexpected notes template output. Expected string, got"
-                        " {type(notes_output)}: {notes_output}"
-                    )
+                    "Unexpected notes template output. Expected string, got"
+                    " {type(notes_output)}: {notes_output}"
                 )
             return notes_output
 
@@ -158,10 +156,8 @@ class HelmRunner:
         if return_code > 0:
             stderr = completed_process.stderr.decode("utf-8")
             raise RuntimeError(
-                (
-                    f"helm command failed with return code {return_code}:"
-                    f"exec {helm_arguments}\n{stderr}"
-                )
+                f"helm command failed with return code {return_code}:"
+                f"exec {helm_arguments}\n{stderr}"
             )
 
         return completed_process.stdout.decode("utf-8")
