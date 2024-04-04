@@ -41,8 +41,21 @@ def test_notes_returns_expected_notes(use_relative_chart_path: bool) -> None:
 
     helm_runner = HelmRunner(cwd=charts_path)
     notes = helm_runner.notes(chart=test_chart_path, name="test-chart")
-    expected_notes = "1. Get the application URL by running these commands:"
-    assert notes.startswith(expected_notes)
+    expected_notes_excerpt = "Visit http://127.0.0.1:8080 to use your application"
+    assert expected_notes_excerpt in notes
+
+
+def test_notes_can_handle_values_given_a_dict() -> None:
+    test_chart_path = fixture_path("charts/test-chart")
+
+    helm_runner = HelmRunner()
+    notes = helm_runner.notes(
+        chart=test_chart_path,
+        name="test-chart",
+        values=[{"service": {"type": "LoadBalancer"}}],
+    )
+    expected_notes_excerpt = "It may take a few minutes for the LoadBalancer IP"
+    assert expected_notes_excerpt in notes
 
 
 @pytest.mark.parametrize(
@@ -69,3 +82,17 @@ def test_template_returns_expected_helm_template_output(
         "test-chart-test-connection",
     }
     assert expected_manifest_names == manifest_names
+
+
+def test_template_can_handle_values_given_a_dict() -> None:
+    test_chart_path = fixture_path("charts/test-chart")
+
+    helm_runner = HelmRunner()
+    manifests = helm_runner.template(
+        chart=test_chart_path,
+        name="test-chart",
+        values=[{"serviceAccount": {"create": False}}],
+    )
+
+    manifest_names = {manifest["metadata"]["name"] for manifest in manifests}
+    assert "test-chart-service-account" not in manifest_names
