@@ -1,9 +1,8 @@
 Name                                                 Stmts   Miss  Cover
 ------------------------------------------------------------------------
 pytest_helm_templates/__init__.py                        2      0   100%
-pytest_helm_templates/__version__.py                    11     11     0%
 pytest_helm_templates/commands/__init__.py               2      0   100%
 pytest_helm_templates/commands/template_command.py      45      0   100%
 pytest_helm_templates/helm_runner.py                    61      4    93%
 ------------------------------------------------------------------------
-TOTAL                                                  121     15    88%
+TOTAL                                                  110      4    96%

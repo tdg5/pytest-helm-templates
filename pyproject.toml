@@ -67,9 +67,15 @@ line-length = 88
 target-version = ["py39"]
 
 [tool.coverage.run]
+omit = [
+  "pytest_helm_templates/__version__.py",
+]
 source = [
   "pytest_helm_templates",
 ]
+
+[tool.coverage.report]
+fail_under = 96
 
 [tool.flake8]
 ignore = ["E203", "E251", "E701", "N805", "W503", "DAR101", "DAR201", "DAR301", "DAR401"]
