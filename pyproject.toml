@@ -66,6 +66,11 @@ include = "pytest_helm_templates(_test)?/.*\\.py$"
 line-length = 88
 target-version = ["py39"]
 
+[tool.coverage.run]
+source = [
+  "pytest_helm_templates",
+]
+
 [tool.flake8]
 ignore = ["E203", "E251", "E701", "N805", "W503", "DAR101", "DAR201", "DAR301", "DAR401"]
 max-line-length = 88

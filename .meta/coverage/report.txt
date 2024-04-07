@@ -1,14 +1,9 @@
-Name                                                           Stmts   Miss  Cover
-----------------------------------------------------------------------------------
-pytest_helm_templates/__init__.py                                  2      0   100%
-pytest_helm_templates/commands/__init__.py                         2      0   100%
-pytest_helm_templates/commands/template_command.py                45      0   100%
-pytest_helm_templates/helm_runner.py                              61      4    93%
-pytest_helm_templates_test/__init__.py                             2      0   100%
-pytest_helm_templates_test/commands/template_command_test.py       6      0   100%
-pytest_helm_templates_test/conftest.py                             0      0   100%
-pytest_helm_templates_test/helm_runner_test.py                    52      0   100%
-pytest_helm_templates_test/test_helpers/__init__.py                2      0   100%
-pytest_helm_templates_test/test_helpers/fixtures/__init__.py      11      3    73%
-----------------------------------------------------------------------------------
-TOTAL                                                            183      7    96%
+Name                                                 Stmts   Miss  Cover
+------------------------------------------------------------------------
+pytest_helm_templates/__init__.py                        2      0   100%
+pytest_helm_templates/__version__.py                    11     11     0%
+pytest_helm_templates/commands/__init__.py               2      0   100%
+pytest_helm_templates/commands/template_command.py      45      0   100%
+pytest_helm_templates/helm_runner.py                    61      4    93%
+------------------------------------------------------------------------
+TOTAL                                                  121     15    88%
