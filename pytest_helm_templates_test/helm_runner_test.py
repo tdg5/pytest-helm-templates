@@ -3,9 +3,90 @@ from tempfile import TemporaryDirectory
 from typing import Optional
 
 import pytest
+import yaml
 
 from pytest_helm_templates.helm_runner import HelmRunner
 from pytest_helm_templates_test.test_helpers import fixture_path
+
+
+def test_computed_values_raises_error_if_local_chart_not_found() -> None:
+    with pytest.raises(ValueError) as ex:
+        HelmRunner().computed_values(
+            chart="/almost/certainly/not/a/real/path",
+            name="test-chart",
+        )
+
+    expected_error = "Computed values can only be rendered for local charts."
+    assert expected_error in str(ex)
+
+
+@pytest.mark.parametrize(
+    "use_relative_chart_path",
+    (False, True),
+)
+def test_computed_values_returns_expected_values(use_relative_chart_path: bool) -> None:
+    absolute_test_chart_path = fixture_path("charts/test-chart")
+    test_chart_path = absolute_test_chart_path
+    charts_path: Optional[str] = None
+    if use_relative_chart_path:
+        charts_path = fixture_path("charts")
+        test_chart_path = path.relpath(test_chart_path, charts_path)
+
+    helm_runner = HelmRunner(cwd=charts_path)
+    values = helm_runner.computed_values(chart=test_chart_path, name="test-chart")
+    with open(
+        f"{absolute_test_chart_path}/values.yaml",
+        encoding="utf-8",
+        mode="r",
+    ) as file:
+        expected_values = yaml.safe_load(file)
+    assert values == expected_values
+
+
+def test_computed_values_can_handle_values_given_as_a_dict() -> None:
+    test_chart_path = fixture_path("charts/test-chart")
+
+    helm_runner = HelmRunner()
+    values = helm_runner.computed_values(
+        chart=test_chart_path,
+        name="test-chart",
+        values=[{"serviceAccount": {"create": False}}],
+    )
+    with open(
+        f"{test_chart_path}/values.yaml",
+        encoding="utf-8",
+        mode="r",
+    ) as file:
+        expected_values = yaml.safe_load(file)
+
+    # Make expected values match our overridden value
+    expected_values["serviceAccount"]["create"] = False
+    assert values == expected_values
+
+
+def test_computed_values_includes_dependency_values() -> None:
+    test_chart_path = fixture_path("charts/test-chart")
+
+    helm_runner = HelmRunner()
+    values = helm_runner.computed_values(
+        chart=test_chart_path,
+        name="test-chart",
+        values=[{"dependency": {"enabled": True}}],
+    )
+    with open(
+        f"{test_chart_path}/values.yaml",
+        encoding="utf-8",
+        mode="r",
+    ) as file:
+        expected_values = yaml.safe_load(file)
+
+    # Make expected values include expected dependency values
+    expected_values["dependency"] = {
+        "config": True,
+        "enabled": True,
+        "global": {},
+    }
+    assert values == expected_values
 
 
 def test_notes_raises_error_if_local_chart_not_found() -> None:

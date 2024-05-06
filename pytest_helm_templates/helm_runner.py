@@ -19,6 +19,60 @@ class HelmRunner:
         self.cwd = cwd
         self.env = env
 
+    def computed_values(
+        self,
+        chart: str,
+        name: str,
+        repo: Optional[str] = None,
+        values: Optional[List[Union[Dict[str, Any], str]]] = None,
+        version: Optional[str] = None,
+    ) -> Dict:
+        """
+        Collect the whole tree of values from the given chart and its
+        dependencies. This function is a bit hacky in that it depends on having
+        a local chart to inject an adhoc template into. There are ways to work
+        around that, but an adhoc template seems simpler and less error prone.
+        """
+        chart_path = Path(chart) if not self.cwd else Path(self.cwd).joinpath(chart)
+        if not path.exists(chart_path):
+            # We could instead take COMPUTED VALUES from `helm install [name]
+            # [chart] --dry-run --debug -f <your_values_file>`, but for now
+            # I've taken the easy way out.
+            # https://github.com/helm/helm/issues/6772
+            raise ValueError(
+                "Computed values can only be rendered for local charts. Could"
+                f" not find local chart `{chart}` ({str(chart_path)})"
+            )
+
+        templates_dir_path = chart_path.joinpath("templates")
+
+        with NamedTemporaryFile(
+            dir=templates_dir_path,
+            encoding="utf-8",
+            mode="w",
+        ) as temp_file:
+            temp_file_name = path.basename(temp_file.name)
+            temp_file.write("{{ toYaml .Values }}")
+            temp_file.flush()
+            manifests = self.template(
+                chart=chart,
+                dry_run="client",
+                include_crds=False,
+                name=name,
+                repo=repo,
+                show_only=[f"templates/{temp_file_name}"],
+                skip_tests=True,
+                values=values,
+                version=version,
+            )
+            values_output = manifests[0]
+            if not isinstance(values_output, Dict):
+                raise ValueError(
+                    "Unexpected computed values. Expected dict, got"
+                    f" {type(values_output)}: {values_output}"
+                )
+            return values_output
+
     def notes(
         self,
         chart: str,

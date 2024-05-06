@@ -1,5 +1,10 @@
 apiVersion: v2
 appVersion: "1.16.0"
+dependencies:
+- condition: dependency.enabled
+  name: dependency
+  repository: https://prometheus-community.github.io/helm-charts
+  version: '*.*.*'
 description: A Helm chart for Kubernetes
 name: test-chart
 type: application
