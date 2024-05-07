@@ -102,6 +102,16 @@ class HelmRunner:
             ]
         )
 
+    def dependency_update(self, chart: str) -> None:
+        self._run(
+            [
+                "helm",
+                "dependency",
+                "update",
+                chart,
+            ]
+        )
+
     def notes(
         self,
         chart: str,
