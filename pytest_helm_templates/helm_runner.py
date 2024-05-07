@@ -92,6 +92,16 @@ class HelmRunner:
                 )
             return values_output
 
+    def dependency_build(self, chart: str) -> None:
+        self._run(
+            [
+                "helm",
+                "dependency",
+                "build",
+                chart,
+            ]
+        )
+
     def notes(
         self,
         chart: str,

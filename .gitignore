@@ -161,3 +161,6 @@ cython_debug/
 
 # Auto-generated
 pytest_helm_templates/__version__.py
+
+Chart.lock
+*.tgz

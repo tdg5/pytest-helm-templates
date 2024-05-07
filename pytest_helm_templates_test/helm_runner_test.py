@@ -84,6 +84,22 @@ def test_computed_values_includes_dependency_values() -> None:
     assert values == expected_values
 
 
+@pytest.mark.parametrize(
+    "use_relative_chart_path",
+    (False, True),
+)
+def test_dependency_build_runs_without_exception(use_relative_chart_path: bool) -> None:
+    test_chart_absolute_path = fixture_path("charts/test-chart")
+    test_chart_path = test_chart_absolute_path
+    charts_path: Optional[str] = None
+    if use_relative_chart_path:
+        charts_path = fixture_path("charts")
+        test_chart_path = path.relpath(test_chart_path, charts_path)
+
+    helm_runner = HelmRunner(cwd=charts_path)
+    helm_runner.dependency_build(chart=test_chart_path)
+
+
 def test_notes_raises_error_if_local_chart_not_found() -> None:
     with pytest.raises(ValueError) as ex:
         HelmRunner().notes(chart="/almost/certainly/not/a/real/path", name="test-chart")
