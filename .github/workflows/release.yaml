@@ -62,7 +62,7 @@ jobs:
           coverage run -m pytest
           coverage report | tee .meta/coverage/report.txt
           coverage-badge -f -o .meta/coverage/badge.svg
-          export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SERVICE_ORIENTED="$VERSION"
+          export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_PYTEST_HELM_TEMPLATES="$VERSION"
           python -m build
 
       - name: Publish package to pypi
