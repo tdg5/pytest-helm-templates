@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import yaml
 
-from pytest_helm_templates.commands import TemplateCommand
+from pytest_helm_templates.commands import ShowValuesCommand, TemplateCommand
 
 
 class HelmRunner:
@@ -19,6 +19,29 @@ class HelmRunner:
     ) -> None:
         self.cwd = cwd
         self.env = env
+
+    def values(
+        self,
+        chart: str,
+        repo: Optional[str] = None,
+        version: Optional[str] = None,
+    ) -> Dict:
+        """
+        Collect the values of the given chart.
+        """
+        helm_arguments = ShowValuesCommand.helm_arguments(
+            chart=chart,
+            repo=repo,
+            version=version,
+        )
+
+        values_output = self._run(helm_arguments=helm_arguments)
+        values = yaml.safe_load(values_output)
+        if not isinstance(values, Dict):
+            raise ValueError(
+                "Unexpected values. Expected dict, got" f" {type(values)}: {values}"
+            )
+        return values
 
     def computed_values(
         self,

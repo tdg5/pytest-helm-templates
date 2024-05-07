@@ -22,8 +22,8 @@ def test_computed_values_raises_error_if_local_chart_not_found() -> None:
     (False, True),
 )
 def test_computed_values_returns_expected_values(use_relative_chart_path: bool) -> None:
-    absolute_test_chart_path = fixture_path("charts/test-chart")
-    test_chart_path = absolute_test_chart_path
+    test_chart_absolute_path = fixture_path("charts/test-chart")
+    test_chart_path = test_chart_absolute_path
     charts_path: Optional[str] = None
     if use_relative_chart_path:
         charts_path = fixture_path("charts")
@@ -32,7 +32,7 @@ def test_computed_values_returns_expected_values(use_relative_chart_path: bool) 
     helm_runner = HelmRunner(cwd=charts_path)
     values = helm_runner.computed_values(chart=test_chart_path)
     with open(
-        f"{absolute_test_chart_path}/values.yaml",
+        f"{test_chart_absolute_path}/values.yaml",
         encoding="utf-8",
         mode="r",
     ) as file:
@@ -160,6 +160,24 @@ def test_template_returns_expected_helm_template_output(
     assert expected_manifest_names == manifest_names
 
 
+def test_template_returns_expected_helm_template_output_for_remote_chart() -> None:
+    helm_runner = HelmRunner()
+    manifests = helm_runner.template(
+        chart="hello-world",
+        name="test-chart",
+        repo="https://helm.github.io/examples",
+        version="0.1.0",
+    )
+
+    manifest_names = {manifest["metadata"]["name"] for manifest in manifests}
+    expected_manifest_names = {"test-chart-hello-world"}
+    assert expected_manifest_names == manifest_names
+
+    manifest_kinds = {manifest["kind"] for manifest in manifests}
+    expected_manifest_kinds = {"Deployment", "Service", "ServiceAccount"}
+    assert expected_manifest_kinds == manifest_kinds
+
+
 def test_template_can_handle_values_given_a_dict() -> None:
     test_chart_path = fixture_path("charts/test-chart")
 
@@ -172,3 +190,37 @@ def test_template_can_handle_values_given_a_dict() -> None:
 
     manifest_names = {manifest["metadata"]["name"] for manifest in manifests}
     assert "test-chart-service-account" not in manifest_names
+
+
+@pytest.mark.parametrize(
+    "use_relative_chart_path",
+    (False, True),
+)
+def test_values_returns_expected_values(use_relative_chart_path: bool) -> None:
+    test_chart_absolute_path = fixture_path("charts/test-chart")
+    test_chart_path = test_chart_absolute_path
+    charts_path: Optional[str] = None
+    if use_relative_chart_path:
+        charts_path = fixture_path("charts")
+        test_chart_path = path.relpath(test_chart_path, charts_path)
+
+    helm_runner = HelmRunner(cwd=charts_path)
+    values = helm_runner.values(chart=test_chart_path)
+    with open(
+        f"{test_chart_absolute_path}/values.yaml",
+        encoding="utf-8",
+        mode="r",
+    ) as file:
+        expected_values = yaml.safe_load(file)
+    assert values == expected_values
+
+
+def test_values_returns_expected_values_for_remote_chart() -> None:
+    helm_runner = HelmRunner()
+    values = helm_runner.values(
+        chart="hello-world",
+        repo="https://helm.github.io/examples",
+        version="0.1.0",
+    )
+    assert "image" in values
+    assert "replicaCount" in values
