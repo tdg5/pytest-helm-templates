@@ -4,6 +4,7 @@ from os import path
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO, Any, Dict, List, Optional, Tuple, Union
+from uuid import uuid4
 
 import yaml
 
@@ -22,10 +23,7 @@ class HelmRunner:
     def computed_values(
         self,
         chart: str,
-        name: str,
-        repo: Optional[str] = None,
         values: Optional[List[Union[Dict[str, Any], str]]] = None,
-        version: Optional[str] = None,
     ) -> Dict:
         """
         Collect the whole tree of values from the given chart and its
@@ -58,12 +56,10 @@ class HelmRunner:
                 chart=chart,
                 dry_run="client",
                 include_crds=False,
-                name=name,
-                repo=repo,
+                name=str(uuid4()),
                 show_only=[f"templates/{temp_file_name}"],
                 skip_tests=True,
                 values=values,
-                version=version,
             )
             values_output = manifests[0]
             if not isinstance(values_output, Dict):

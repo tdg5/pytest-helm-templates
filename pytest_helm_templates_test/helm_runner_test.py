@@ -11,10 +11,7 @@ from pytest_helm_templates_test.test_helpers import fixture_path
 
 def test_computed_values_raises_error_if_local_chart_not_found() -> None:
     with pytest.raises(ValueError) as ex:
-        HelmRunner().computed_values(
-            chart="/almost/certainly/not/a/real/path",
-            name="test-chart",
-        )
+        HelmRunner().computed_values(chart="/almost/certainly/not/a/real/path")
 
     expected_error = "Computed values can only be rendered for local charts."
     assert expected_error in str(ex)
@@ -33,7 +30,7 @@ def test_computed_values_returns_expected_values(use_relative_chart_path: bool) 
         test_chart_path = path.relpath(test_chart_path, charts_path)
 
     helm_runner = HelmRunner(cwd=charts_path)
-    values = helm_runner.computed_values(chart=test_chart_path, name="test-chart")
+    values = helm_runner.computed_values(chart=test_chart_path)
     with open(
         f"{absolute_test_chart_path}/values.yaml",
         encoding="utf-8",
@@ -49,7 +46,6 @@ def test_computed_values_can_handle_values_given_as_a_dict() -> None:
     helm_runner = HelmRunner()
     values = helm_runner.computed_values(
         chart=test_chart_path,
-        name="test-chart",
         values=[{"serviceAccount": {"create": False}}],
     )
     with open(
@@ -70,7 +66,6 @@ def test_computed_values_includes_dependency_values() -> None:
     helm_runner = HelmRunner()
     values = helm_runner.computed_values(
         chart=test_chart_path,
-        name="test-chart",
         values=[{"dependency": {"enabled": True}}],
     )
     with open(
