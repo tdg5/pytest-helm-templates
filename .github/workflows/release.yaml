@@ -36,7 +36,7 @@ jobs:
         run: |
           source venv/bin/activate
           pip install .[all]
-          pip uninstall -y pyest-helm-templates
+          pip uninstall -y pytest-helm-templates
           pip freeze > requirements.txt
 
           if ! `git diff --quiet`; then
