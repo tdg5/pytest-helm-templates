@@ -9,6 +9,7 @@ from uuid import uuid4
 import yaml
 
 from pytest_helm_templates.commands import ShowValuesCommand, TemplateCommand
+from pytest_helm_templates.types import DependencyListItem
 
 
 class HelmRunner:
@@ -93,24 +94,37 @@ class HelmRunner:
             return values_output
 
     def dependency_build(self, chart: str) -> None:
-        self._run(
-            [
-                "helm",
-                "dependency",
-                "build",
-                chart,
-            ]
-        )
+        self._run(["helm", "dependency", "build", chart])
+
+    def dependency_list(self, chart: str) -> List[DependencyListItem]:
+        dependency_list_output = self._run(["helm", "dependency", "list", chart])
+        rows = [row for row in dependency_list_output.split("\n") if row][1:]
+        rows_fields = [row.split("\t") for row in rows]
+        records = [
+            [field.strip() for field in row_fields] for row_fields in rows_fields
+        ]
+        return [
+            DependencyListItem(
+                name=record[0],
+                repository=record[2],
+                status=record[3],
+                version=record[1],
+            )
+            for record in records
+        ]
 
     def dependency_update(self, chart: str) -> None:
-        self._run(
-            [
-                "helm",
-                "dependency",
-                "update",
-                chart,
-            ]
-        )
+        self._run(["helm", "dependency", "update", chart])
+
+    def dependency_update_if_missing(self, chart: str) -> None:
+        """
+        Like dependency_update, but only triggers dependency_update if any of
+        the dependencies are not ok.
+        """
+        dependency_list = self.dependency_list(chart=chart)
+        if not dependency_list or all(item.is_ok for item in dependency_list):
+            return
+        self.dependency_update(chart=chart)
 
     def notes(
         self,

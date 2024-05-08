@@ -4,6 +4,7 @@ from typing import Optional
 
 import pytest
 import yaml
+from pytest_mock import MockerFixture
 
 from pytest_helm_templates.helm_runner import HelmRunner
 from pytest_helm_templates_test.test_helpers import fixture_path
@@ -104,6 +105,32 @@ def test_dependency_build_runs_without_exception(use_relative_chart_path: bool) 
     "use_relative_chart_path",
     (False, True),
 )
+def test_dependency_list_returns_expected_values(
+    use_relative_chart_path: bool,
+) -> None:
+    test_chart_absolute_path = fixture_path("charts/test-chart")
+    test_chart_path = test_chart_absolute_path
+    charts_path: Optional[str] = None
+    if use_relative_chart_path:
+        charts_path = fixture_path("charts")
+        test_chart_path = path.relpath(test_chart_path, charts_path)
+
+    helm_runner = HelmRunner(cwd=charts_path)
+    dependency_list_items = helm_runner.dependency_list(chart=test_chart_path)
+    assert len(dependency_list_items) == 1
+    dependency_list_item = dependency_list_items[0]
+    assert dependency_list_item.name == "dependency"
+    assert dependency_list_item.version == "*.*.*"
+    assert dependency_list_item.repository == "file://charts/dependency"
+    assert dependency_list_item.status == "ok"
+    assert dependency_list_item.is_ok is True
+    assert dependency_list_item.is_missing is False
+
+
+@pytest.mark.parametrize(
+    "use_relative_chart_path",
+    (False, True),
+)
 def test_dependency_update_runs_without_exception(
     use_relative_chart_path: bool,
 ) -> None:
@@ -116,6 +143,58 @@ def test_dependency_update_runs_without_exception(
 
     helm_runner = HelmRunner(cwd=charts_path)
     helm_runner.dependency_update(chart=test_chart_path)
+
+
+@pytest.mark.parametrize(
+    "use_relative_chart_path",
+    (False, True),
+)
+def test_dependency_update_if_missing_does_not_update_when_no_missing_dependencies(
+    mocker: MockerFixture,
+    use_relative_chart_path: bool,
+) -> None:
+    test_chart_absolute_path = fixture_path("charts/test-chart")
+    test_chart_path = test_chart_absolute_path
+    charts_path: Optional[str] = None
+    if use_relative_chart_path:
+        charts_path = fixture_path("charts")
+        test_chart_path = path.relpath(test_chart_path, charts_path)
+
+    helm_runner = HelmRunner(cwd=charts_path)
+    dependency_update_mock = mocker.patch.object(helm_runner, "dependency_update")
+    helm_runner.dependency_update_if_missing(chart=test_chart_path)
+    dependency_update_mock.assert_not_called()
+
+
+def test_dependency_update_if_missing_does_not_update_when_no_dependencies(
+    mocker: MockerFixture,
+) -> None:
+    helm_runner = HelmRunner()
+    mocker.patch.object(helm_runner, "dependency_list", return_value=[])
+    dependency_update_mock = mocker.patch.object(helm_runner, "dependency_update")
+
+    test_chart_path = fixture_path("charts/test-chart")
+    helm_runner.dependency_update_if_missing(chart=test_chart_path)
+    dependency_update_mock.assert_not_called()
+
+
+def test_dependency_update_if_missing_does_update_when_missing_dependencies(
+    mocker: MockerFixture,
+) -> None:
+    helm_runner = HelmRunner()
+    test_chart_path = fixture_path("charts/test-chart")
+
+    dependency = helm_runner.dependency_list(chart=test_chart_path)[0]
+    dependency.status = "missing"
+    mocker.patch.object(
+        helm_runner,
+        "dependency_list",
+        return_value=[dependency],
+    )
+
+    dependency_update_mock = mocker.patch.object(helm_runner, "dependency_update")
+    helm_runner.dependency_update_if_missing(chart=test_chart_path)
+    dependency_update_mock.assert_called_once()
 
 
 def test_notes_raises_error_if_local_chart_not_found() -> None:
