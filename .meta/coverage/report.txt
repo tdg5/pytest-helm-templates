@@ -4,7 +4,7 @@ pytest_helm_templates/__init__.py                           3      0   100%
 pytest_helm_templates/commands/__init__.py                  3      0   100%
 pytest_helm_templates/commands/show_values_command.py      12      0   100%
 pytest_helm_templates/commands/template_command.py         45      0   100%
-pytest_helm_templates/helm_runner.py                       99      6    94%
+pytest_helm_templates/helm_runner.py                      100      7    93%
 pytest_helm_templates/types.py                             13      0   100%
 ---------------------------------------------------------------------------
-TOTAL                                                     175      6    97%
+TOTAL                                                     176      7    96%
