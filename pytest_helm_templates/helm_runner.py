@@ -44,6 +44,60 @@ class HelmRunner:
             )
         return values
 
+    def adhoc_template(
+        self,
+        chart: str,
+        content: str,
+        name: str,
+        api_versions: Optional[List[str]] = None,
+        dry_run: Optional[str] = None,
+        include_crds: Optional[bool] = None,
+        is_upgrade: Optional[bool] = None,
+        kube_version: Optional[str] = None,
+        namespace: Optional[str] = None,
+        repo: Optional[str] = None,
+        skip_tests: Optional[bool] = None,
+        values: Optional[List[Union[Dict[str, Any], str]]] = None,
+        version: Optional[str] = None,
+    ) -> Dict:
+        """
+        Like template, but renders a single adhoc template populated with the
+        given content.
+        """
+        chart_path = Path(chart) if not self.cwd else Path(self.cwd).joinpath(chart)
+        if not path.exists(chart_path):
+            raise ValueError(
+                "Adhoc templates can only be rendered for local charts. Could"
+                f" not find local chart `{chart}` ({str(chart_path)})"
+            )
+
+        templates_dir_path = chart_path.joinpath("templates")
+
+        with NamedTemporaryFile(
+            dir=templates_dir_path,
+            encoding="utf-8",
+            mode="w",
+        ) as temp_file:
+            temp_file_name = path.basename(temp_file.name)
+            temp_file.write(content)
+            temp_file.flush()
+            manifests = self.template(
+                api_versions=api_versions,
+                chart=chart,
+                dry_run=dry_run,
+                include_crds=include_crds,
+                is_upgrade=is_upgrade,
+                kube_version=kube_version,
+                name=name,
+                namespace=namespace,
+                repo=repo,
+                show_only=[f"templates/{temp_file_name}"],
+                skip_tests=skip_tests,
+                values=values,
+                version=version,
+            )
+            return manifests[0]
+
     def computed_values(
         self,
         chart: str,
@@ -66,32 +120,18 @@ class HelmRunner:
                 f" not find local chart `{chart}` ({str(chart_path)})"
             )
 
-        templates_dir_path = chart_path.joinpath("templates")
-
-        with NamedTemporaryFile(
-            dir=templates_dir_path,
-            encoding="utf-8",
-            mode="w",
-        ) as temp_file:
-            temp_file_name = path.basename(temp_file.name)
-            temp_file.write("{{ toYaml .Values }}")
-            temp_file.flush()
-            manifests = self.template(
-                chart=chart,
-                dry_run="client",
-                include_crds=False,
-                name=str(uuid4()),
-                show_only=[f"templates/{temp_file_name}"],
-                skip_tests=True,
-                values=values,
+        values_output = self.adhoc_template(
+            chart=chart,
+            content="{{ toYaml .Values }}",
+            name=str(uuid4()),
+            values=values,
+        )
+        if not isinstance(values_output, Dict):
+            raise ValueError(
+                "Unexpected computed values. Expected dict, got"
+                f" {type(values_output)}: {values_output}"
             )
-            values_output = manifests[0]
-            if not isinstance(values_output, Dict):
-                raise ValueError(
-                    "Unexpected computed values. Expected dict, got"
-                    f" {type(values_output)}: {values_output}"
-                )
-            return values_output
+        return values_output
 
     def dependency_build(self, chart: str) -> None:
         self._run(["helm", "dependency", "build", chart])
@@ -163,36 +203,28 @@ class HelmRunner:
             notes_template = notes_file.read()
         indented_notes_template = textwrap.indent(notes_template, "  ")
 
-        with NamedTemporaryFile(
-            dir=templates_dir_path,
-            encoding="utf-8",
-            mode="w",
-        ) as temp_file:
-            temp_file_name = path.basename(temp_file.name)
-            temp_file.write(f"---\nNOTES.txt: |\n{indented_notes_template}")
-            temp_file.flush()
-            manifests = self.template(
-                api_versions=api_versions,
-                chart=chart,
-                dry_run=dry_run,
-                include_crds=False,
-                is_upgrade=is_upgrade,
-                kube_version=kube_version,
-                namespace=namespace,
-                name=name,
-                repo=repo,
-                show_only=[f"templates/{temp_file_name}"],
-                skip_tests=True,
-                values=values,
-                version=version,
+        notes_result = self.adhoc_template(
+            api_versions=api_versions,
+            chart=chart,
+            content=f"---\nNOTES.txt: |\n{indented_notes_template}",
+            dry_run=dry_run,
+            include_crds=False,
+            is_upgrade=is_upgrade,
+            kube_version=kube_version,
+            name=name,
+            namespace=namespace,
+            repo=repo,
+            skip_tests=True,
+            values=values,
+            version=version,
+        )
+        notes_output = notes_result["NOTES.txt"]
+        if not isinstance(notes_output, str):
+            raise ValueError(
+                "Unexpected notes template output. Expected string, got"
+                " {type(notes_output)}: {notes_output}"
             )
-            notes_output = manifests[0]["NOTES.txt"]
-            if not isinstance(notes_output, str):
-                raise ValueError(
-                    "Unexpected notes template output. Expected string, got"
-                    " {type(notes_output)}: {notes_output}"
-                )
-            return notes_output
+        return notes_output
 
     def template(
         self,
