@@ -1,6 +1,6 @@
 from os import path
 from tempfile import TemporaryDirectory
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import pytest
 import yaml
@@ -303,6 +303,30 @@ def test_template_can_handle_values_given_a_dict() -> None:
 
     manifest_names = {manifest["metadata"]["name"] for manifest in manifests}
     assert "test-chart-service-account" not in manifest_names
+
+
+def test_template_should_support_override_delete_of_values() -> None:
+    test_chart_path = fixture_path("charts/test-chart")
+
+    helm_runner = HelmRunner()
+    http_get_delete_values = {"livenessProbe": {"httpGet": None}}
+    for include_http_get_probe in [True, False]:
+        manifests = helm_runner.template(
+            chart=test_chart_path,
+            name="test-chart",
+            values=[] if include_http_get_probe else [http_get_delete_values],
+        )
+
+        deployment_manifest: Optional[Dict[str, Any]] = None
+        for manifest in manifests:
+            if manifest["metadata"]["name"] == "test-chart-deployment":
+                deployment_manifest = manifest
+                break
+        if deployment_manifest is None:
+            raise RuntimeError("Could not find deployment manifest!")
+
+        container = deployment_manifest["spec"]["template"]["spec"]["containers"][0]
+        assert ("httpGet" in container["livenessProbe"]) == include_http_get_probe
 
 
 @pytest.mark.parametrize(
